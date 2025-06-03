@@ -7,66 +7,71 @@ object BlockParser {
         var i = 0
 
         while (i < lines.size) {
-            if (lines[i].isBlank()) {
-                i++
-                continue
-            }
+            try {
+                if (lines[i].isBlank()) {
+                    i++
+                    continue
+                }
 
-            when {
-                // Handle multi-line blocks first
-                lines[i].startsWith("```") -> {
-                    val (block, consumed) = parseCodeBlock(lines, i)
-                    blocks.add(block)
-                    i += consumed
+                when {
+                    // Handle multi-line blocks first
+                    lines[i].startsWith("```") -> {
+                        val (block, consumed) = parseCodeBlock(lines, i)
+                        blocks.add(block)
+                        i += consumed
+                    }
+                    lines[i].startsWith("@collapse") -> {
+                        val (block, consumed) = parseCollapseBlock(lines, i)
+                        blocks.add(block)
+                        i += consumed
+                    }
+                    lines[i].startsWith("@align") -> {
+                        val (block, consumed) = parseAlignBlock(lines, i)
+                        blocks.add(block)
+                        i += consumed
+                    }
+                    lines[i].startsWith("@html") -> {
+                        val (block, consumed) = parseHtmlBlock(lines, i)
+                        blocks.add(block)
+                        i += consumed
+                    }
+                    lines[i].startsWith("|") && i + 1 < lines.size &&
+                            lines[i + 1].matches(Regex(".*\\|.*-+.*")) -> {
+                        val (block, consumed) = parseTableBlock(lines, i)
+                        blocks.add(block)
+                        i += consumed
+                    }
+                    // Handle single-line blocks
+                    lines[i].startsWith("-#") -> {
+                        blocks.add(parseDimmedNote(lines[i]))
+                        i++
+                    }
+                    lines[i].startsWith("@button") -> {
+                        blocks.add(parseButton(lines[i]))
+                        i++
+                    }
+                    lines[i].startsWith(">") -> {
+                        val (block, consumed) = parseBlockQuote(lines, i)
+                        blocks.add(block)
+                        i += consumed
+                    }
+                    lines[i].trim().startsWith("- ") -> {
+                        val (block, consumed) = parseListBlock(lines, i)
+                        blocks.add(block)
+                        i += consumed
+                    }
+                    lines[i].startsWith("#") -> {
+                        blocks.add(parseHeading(lines[i]))
+                        i++
+                    }
+                    else -> {
+                        blocks.add(parseParagraph(lines[i]))
+                        i++
+                    }
                 }
-                lines[i].startsWith("@collapse") -> {
-                    val (block, consumed) = parseCollapseBlock(lines, i)
-                    blocks.add(block)
-                    i += consumed
-                }
-                lines[i].startsWith("@align") -> {
-                    val (block, consumed) = parseAlignBlock(lines, i)
-                    blocks.add(block)
-                    i += consumed
-                }
-                lines[i].startsWith("@html") -> {
-                    val (block, consumed) = parseHtmlBlock(lines, i)
-                    blocks.add(block)
-                    i += consumed
-                }
-                lines[i].startsWith("|") && i + 1 < lines.size &&
-                        lines[i + 1].matches(Regex(".*\\|.*-+.*")) -> {
-                    val (block, consumed) = parseTableBlock(lines, i)
-                    blocks.add(block)
-                    i += consumed
-                }
-                // Handle single-line blocks
-                lines[i].startsWith("-#") -> {
-                    blocks.add(parseDimmedNote(lines[i]))
-                    i++
-                }
-                lines[i].startsWith("@button") -> {
-                    blocks.add(parseButton(lines[i]))
-                    i++
-                }
-                lines[i].startsWith(">") -> {
-                    val (block, consumed) = parseBlockQuote(lines, i)
-                    blocks.add(block)
-                    i += consumed
-                }
-                lines[i].trim().startsWith("- ") -> {
-                    val (block, consumed) = parseListBlock(lines, i)
-                    blocks.add(block)
-                    i += consumed
-                }
-                lines[i].startsWith("#") -> {
-                    blocks.add(parseHeading(lines[i]))
-                    i++
-                }
-                else -> {
-                    blocks.add(parseParagraph(lines[i]))
-                    i++
-                }
+            } catch (e: Exception) {
+                blocks.add(ParagraphNode(listOf(TextNode(lines[i]))))
+                i++
             }
         }
 

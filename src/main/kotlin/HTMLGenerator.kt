@@ -76,6 +76,11 @@ object HtmlGenerator {
         is BoldNode -> "<strong>${inlineToHtml(node.content)}</strong>"
         is ItalicNode -> "<em>${inlineToHtml(node.content)}</em>"
         is LinkNode -> "<a href=\"${Utils.escapeHtml(node.url)}\">${inlineToHtml(node.content)}</a>"
+        is ImageNode -> {
+            val titleAttr = node.title?.let { " title=\"${Utils.escapeHtml(it)}\"" } ?: ""
+            "<img src=\"${Utils.escapeHtml(node.url)}\" alt=\"${Utils.escapeHtml(node.altText)}\"$titleAttr>"
+        }
+        is InlineCodeNode -> "<code>${Utils.escapeHtml(node.code)}</code>"
     }
 
     private fun renderList(items: List<ListItem>): String {

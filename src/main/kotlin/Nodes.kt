@@ -51,6 +51,10 @@ data class ItalicNode(val content: List<InlineNode>) : InlineNode
 
 data class LinkNode(val url: String, val content: List<InlineNode>) : InlineNode
 
+data class ImageNode(val url: String, val altText: String, val title: String?) : InlineNode
+
+data class InlineCodeNode(val code: String) : InlineNode
+
 // You can add more inline nodes as needed (e.g., code spans, images, etc.)
 
 // Exception for parsing errors
